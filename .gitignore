@@ -1,1 +1,4 @@
 .Rproj.user
+local/
+token_usage.csv
+.Rhistory
