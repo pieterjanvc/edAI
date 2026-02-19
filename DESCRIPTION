@@ -1,0 +1,10 @@
+Package: edAI
+Title: Learn about using AI in R
+Version: 0.0.0.9000
+Authors@R: 
+    person("PJ", "Van Camp", , "pjvancamp@hms.harvard.edu", role = c("aut", "cre"))
+Description: Library with functions and examples to learn about interacting with AI models
+License: `use_gpl3_license()`
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
