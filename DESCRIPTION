@@ -9,10 +9,16 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Suggests:
-  devtools,
-  roxygen2
+    devtools,
+    knitr,
+    rmarkdown,
+    roxygen2
 Imports:
+  bslib,
+  dplyr,
   ellmer,
   httr2,
-  keyring
-  
+  jsonlite,
+  keyring,
+  shiny
+VignetteBuilder: knitr

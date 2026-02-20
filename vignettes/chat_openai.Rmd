@@ -1,0 +1,110 @@
+---
+title: "chat_openai"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{chat_openai}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ellmer)
+```
+
+## Chat with an LLM
+
+### 1. Initialise the session
+
+To start chatting with an LLM, use the one of the chat functions from `ellmer`
+- The model must be supported by the service you have authenticate to
+- You can set a system prompt that will define the overall behaviour / response
+  of the LLM. This is not the chat input!
+```{r}
+
+chat <- chat_azure_openai(
+  model = "gpt-5-mini",
+  system_prompt = "Be terse"
+)
+```
+
+### 2. Send your first prompt
+
+You can now ask the LLM a question or give it a task
+```{r}
+answer <- chat$chat("Which are the 3 largest states in the USA by area?")
+```
+
+### 3. Continue the conversation
+
+The `chat` object remembers the previous conversation. This mean your next input does not need to provide the previous context.
+```{r}
+answer <- chat$chat("Can you re-rank these three by population")
+```
+
+This history is kept until the chat session is re-initialised. This happens when
+  - You overwrite or `chat` the variable in Step 1 
+  - You create a new chat object and use that one instead
+  - You restart R
+
+## Creating custom tools
+
+You can provide the LLM access to custom R functions by sharing information about 
+what function does (input and output). The LLM can request to run them based on 
+the prompt, and use the results for to help shape the answer. To be clear, 
+the LLM is not doing any function calculations, R is doing this on your computer.
+
+### 1. Define an R function
+```{r}
+# Define a regular function to use as a tool (something an LLM would struggle with)
+lucky_numbers <- function(n = 3) {
+  if (n < 1) {
+    return("You must request at least 1 number")
+  }
+  set.seed(Sys.Date())
+  sample(1:100, n)
+}
+
+```
+
+#### 2. Convert it into a tool
+Use the `tool` function to create the tool from the regular function 
+
+- The description should be clear as this is what the LLM will use to decide
+whether it wants to use it or not
+- The arguments will be provided as text by the LLM based on the prompt
+  - Provide a named list using the function arguments you defined
+  - Use any of the available type converters so the LLM can generate an
+  appropriate input from the description you provide inside
+```{r}
+# Create the tool
+lucky_numbers_tool <- tool(
+  lucky_numbers,
+  name = "lucky_numbers",
+  description = "Returns a list of n lucky numbers (changes daily)",
+  arguments = list(
+    n = type_integer("The number of lucky numbers to return. Defaults to 3")
+  )
+)
+```
+For a full list of types, check out https://ellmer.tidyverse.org/articles/tool-calling.html#tool-inputs-and-outputs
+
+#### 3. Register the tool for use
+```{r}
+chat$register_tool(lucky_numbers)
+```
+
+#### 4. Chat with the LLM
+Based on the prompt, the LLM can now decide to use your tools, which you will 
+see popping up in the console if activated during a chat session.
+```{r}
+chat$chat("What are my lucky numbers?")
+```
+
+
