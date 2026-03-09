@@ -1,12 +1,12 @@
 ---
 title: "LLM intro template - Solution"
-author: "PJ"
-date: "2026-03-09"
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE,  comment = "#>")
 library(edAI)
+library(jsonlite)
+library(ellmer)
 ```
 
 ## Intro
@@ -41,13 +41,12 @@ edAI_init()
 ### 2.2 - Connect to a chat model
 
 To start chatting with an LLM, use the one of the chat functions from `ellmer`
-- Load the `ellmer` library
+- Make sure the `ellmer` library has been loaded
 - Use the `chat_azure_openai()` function to establish a connection and save the
   connection to a variable called `conn`
 - Request access to the "gpt-5-mini" model
 
 ```{r}
-library(ellmer)
 conn <- chat_azure_openai(model = "gpt-5-mini")
 ```
 
@@ -99,10 +98,11 @@ objects.
 Tip: Instead of using real line breaks, insert the line break character `\n`
 
 The resulting table should look like this
-| id| val|
-|--:|---:|
-|  1|   5|
-|  2|   7|
+```
+id val
+1   5
+2   7
+```
 
 ```{r}
 string <- "id,val\n1,5\n2,7"
@@ -128,14 +128,15 @@ Tips
     --> 'this quote " is part of the text'
     
 The resulting list should look like this
+```
 $attempt
 [1] 1
 
 $letters
 [1] "A" "B" "C"
+```
 
 ```{r}
-library(jsonlite)
 string <- '{"attempt": 1,"letters":["A","B","C"]}'
 result_list <- fromJSON(string)
 print(result_list)
@@ -145,6 +146,8 @@ print(result_list)
 
 Combining all previous steps, we'll now prompt the LLM, make sure the output 
 is structured, and then parse it as an R object.
+
+### 4.1 - Disease symptom table
  
 - Create a new Azure LLM object called `symptoms` which can take prompts
 - The prompt will ask to return a list of up to 5 symptoms for a given disease 
@@ -152,9 +155,9 @@ is structured, and then parse it as an R object.
 - Structure the prompt such that it will return text that can be parsed as a CSV
   file which, when read into a data frame will have two columns:
   - symptom: the name of the symptom
-  - occurrence: score between 1 - 4 with 1 being nearly always present and 4 rarely present
-- When finished, you should have a variable called `symptoms_table` that contains
-  and R data frame with the result
+  - occurrence: score between 1 - 4 with 1 being nearly always present and 4        rarely present
+- When finished, you should have a variable called `symptoms_table` that 
+  contains an R data frame with the result
   
 The resulting table should look something like this
                               symptom occurrence
@@ -176,4 +179,37 @@ symptoms_table <- read.csv(textConnection(llm_output))
 print(symptoms_table)
 ```
 
+### 4.2 - Disease info list
+
+Modify the previous prompt such that the LLM now return data that can be parsed
+into an R list with the following elements
+
+- symptoms: a list of up to 5 typical symptoms
+- incidence: a number indicating the amount of new cases per year in the USA
+- age group: whether this disease if common in children, adults or both
+
+The resulting list should look something like this
+```
+$symptoms
+[1] "Chest pain or pressure (often central)"   
+[2] "Shortness of breath"                      
+[3] "Sweating (diaphoresis)"                   
+[4] "Nausea or vomiting"                       
+[5] "Pain radiating to arm, neck, jaw, or back"
+
+$incidence
+[1] 605000
+
+$age_group
+[1] "adults"
+```
+
+```{r}
+symptoms <- chat_azure_openai(model = "gpt-5-mini")
+llm_output <- symptoms$chat('Provide some details about cardiac infarction.
+1) A list of up to 5 typical symptoms. 2) a number indicating the amount of new cases per year in the USA. 3) whether this disease if common in: children, adults both. Provide the output as JSON that can be parsed using this example template:
+{"symptoms"}: ["symptom1", "symptom2"],"incidence": 50000, "age_group": "both"}')
+symptoms_list <- fromJSON(llm_output)
+print(symptoms_list)
+```
 

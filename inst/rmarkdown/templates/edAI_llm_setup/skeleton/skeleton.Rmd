@@ -1,13 +1,12 @@
 ---
-title: "Template Title"
-author: "Your Name"
-date: "The Date"
-output: output_format
+title: "LLM intro template"
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE,  comment = "#>")
 library(edAI)
+library(jsonlite)
+library(ellmer)
 ```
 
 ## Intro
@@ -26,7 +25,7 @@ used to track your token usage
 - api key: the key provided to you by the instructors 
 
 ```{r}
-edAI_setup()
+
 ```
 
 
@@ -37,19 +36,18 @@ Run the `edAI_init()` function from the `edAI` package to authenticate with
 the Azure cloud
 
 ```{r}
-edAI_init()
+
 ```
 ### 2.2 - Connect to a chat model
 
 To start chatting with an LLM, use the one of the chat functions from `ellmer`
-- Load the `ellmer` library
+- Make sure the `ellmer` library has been loaded
 - Use the `chat_azure_openai()` function to establish a connection and save the
   connection to a variable called `conn`
 - Request access to the "gpt-5-mini" model
 
 ```{r}
-library(ellmer)
-conn <- chat_azure_openai(model = "gpt-5-mini")
+
 ```
 
 ### 2.3. - Send your first prompt
@@ -60,7 +58,7 @@ using the `$` operator
 - Store the result inside a new variable called `answer1`
 
 ```{r}
-answer1 <- conn$chat("Which nerve enervates the biceps brachii muscle")
+
 ```
 
 ### 2.3 - Continue the conversation
@@ -70,7 +68,7 @@ can build off the last answer without having to provide more context.
 - Ask the model which other muscles are enervated by this nerve
 - Store the answer in a variable called `answer2`
 ```{r}
-answer2 <- conn$chat("Which other muscles are enervated by this nerve")
+
 ```
 
 This history is kept until the chat session is re-initialised. This happens when
@@ -100,13 +98,14 @@ objects.
 Tip: Instead of using real line breaks, insert the line break character `\n`
 
 The resulting table should look like this
-| id| val|
-|--:|---:|
-|  1|   5|
-|  2|   7|
+```
+id val
+1   5
+2   7
+```
 
 ```{r}
-string <- "id,val\n1,5\n2,7"
+string <- ""
 result_table <- read.csv(textConnection(string)) 
 print(result_table)
 ```
@@ -129,23 +128,26 @@ Tips
     --> 'this quote " is part of the text'
     
 The resulting list should look like this
+```
 $attempt
 [1] 1
 
 $letters
 [1] "A" "B" "C"
+```
 
 ```{r}
-library(jsonlite)
-string <- '{"attempt": 1,"letters":["A","B","C"]}'
+string <- ""
 result_list <- fromJSON(string)
 print(result_list)
 ```
 
 ## 4 - Let the LLM return stuctured data and parse it
 
-Combining all previous steps, we'll now prompt the LLM, make sure the output 
+Combining all previous steps, we'll now prompt the LLM and make sure the output 
 is structured, and then parse it as an R object.
+
+### 4.1 - Disease symptom table
  
 - Create a new Azure LLM object called `symptoms` which can take prompts
 - The prompt will ask to return a list of up to 5 symptoms for a given disease 
@@ -153,28 +155,53 @@ is structured, and then parse it as an R object.
 - Structure the prompt such that it will return text that can be parsed as a CSV
   file which, when read into a data frame will have two columns:
   - symptom: the name of the symptom
-  - occurrence: score between 1 - 4 with 1 being nearly always present and 4 rarely present
-- When finished, you should have a variable called `symptoms_table` that contains
-  and R data frame with the result
+  - occurrence: score between 1 - 4 with 1 being nearly always present and 4        rarely present
+- When finished, you should have a variable called `symptoms_table` that 
+  contains an R data frame with the result
   
 The resulting table should look something like this
+```
                               symptom occurrence
 1              Chest pain or pressure         1
 2       Shortness of breath (dyspnea)         2
 3              Diaphoresis (sweating)         2
 4 Radiating pain to left arm/jaw/neck         3
 5 Syncope or profound lightheadedness         4
+```
 
 Tip: LLMs know how CSV files are structured, so you don't need to provide an
 example, but you do need to describe the expected content (columns and values)
 
 ```{r}
-symptoms <- chat_azure_openai(model = "gpt-5-mini")
-llm_output <- symptoms$chat("Give me a list of up to 5 symptoms for cardiac infarction. For each
-rate the occurrence between 1 - 4 with 1 being nearly always present and 4 rarely present . 
-Provide the output as a CSV file that can be parsed with the following columns: symptom,occurence")
-symptoms_table <- read.csv(textConnection(llm_output))
-print(symptoms_table)
+
 ```
 
+### 4.2 - Disease info list
+
+Modify the previous prompt such that the LLM now return data that can be parsed
+into an R list with the following elements
+
+- symptoms: a list of up to 5 typical symptoms
+- incidence: a number indicating the amount of new cases per year in the USA
+- age group: whether this disease if common in children, adults or both
+
+The resulting list should look something like this
+```
+$symptoms
+[1] "Chest pain or pressure (often central)"   
+[2] "Shortness of breath"                      
+[3] "Sweating (diaphoresis)"                   
+[4] "Nausea or vomiting"                       
+[5] "Pain radiating to arm, neck, jaw, or back"
+
+$incidence
+[1] 605000
+
+$age_group
+[1] "adults"
+```
+
+```{r}
+
+```
 
