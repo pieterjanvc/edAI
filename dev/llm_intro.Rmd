@@ -76,6 +76,23 @@ This history is kept until the chat session is re-initialised. This happens when
   - You create a new chat object and use that one instead
   - You restart R
   
+### 2.4 - The system prompt
+
+When creating a connection object you can also specify a system prompt to shape
+the model's overall thought process and response.
+
+- Replace the `conn` object with a new instance by reassigning it below
+- Use the same model, but now add a system prompt that request that the answer 
+  only contains anatomical names and uses bullet points in case there are multiple
+- When ready, run this code block first the, re-run 2.2 and 2.3 and see how 
+  the answer had changed without having touched the user prompt
+```{r}
+conn <- chat_azure_openai(model = "gpt-5-mini", system_prompt = "Only reply with one or more names of anatomical descriptions, in bullet points if needed. Nothing else.")
+```
+  
+Tip: you can also change the system prompt inside of the `chat` function if
+you only want to change it for that particular answer
+
 ## 3 - Parsing JSON and CSV
 
 So far the AI has returned plain text, which needs a human to read and process
@@ -155,7 +172,8 @@ is structured, and then parse it as an R object.
 - Structure the prompt such that it will return text that can be parsed as a CSV
   file which, when read into a data frame will have two columns:
   - symptom: the name of the symptom
-  - occurrence: score between 1 - 4 with 1 being nearly always present and 4        rarely present
+  - occurrence: score between 1 - 4 with 1 being nearly always present and 4 
+  rarely present
 - When finished, you should have a variable called `symptoms_table` that 
   contains an R data frame with the result
   
