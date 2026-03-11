@@ -4,13 +4,14 @@ title: "LLM_extra"
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(ellmer)
 library(glue)
 library(jsonlite)
 library(rentrez)
 library(xml2)
 library(dplyr)
+
+knitr::opts_chunk$set(echo = TRUE)
 edAI_init()
 ```
 
@@ -31,7 +32,10 @@ called `prompt`
 new line separators `\n` in between and save this again to the `prompt` variable 
 - Use the `cat` function to print the text with line breaks to the console
 ```{r}
-prompt <- readLines("prompt_simple.txt") 
+# Replace with your own file if you like
+prompt_file <- system.file("rmarkdown", "templates", "edai_llm_extra", "skeleton", "prompt_simple.txt", package = "edAI")
+
+prompt <- readLines(prompt_file) 
 prompt <- paste(prompt, collapse = "\n")
 cat(prompt)
 ```
@@ -45,13 +49,6 @@ cat(prompt)
 ```{r}
 conn <- chat_azure_openai(model = "gpt-5-mini", system_prompt = "be terse")
 answer <- conn$chat(prompt)
-```
-
-```{r}
-disease = "cardiac infarcion"
-prompt <- readLines("prompt_template.txt") |> paste(collapse = "\n")
-prompt <- glue(prompt)
-
 ```
 
 ### 1.3 - Modify a prompt with `glue`
@@ -77,8 +74,11 @@ Let's now use this in our prompt files ...
 - Print your result to the console (or test it with the LLM)
 
 ```{r}
+# Replace with your own file if you like
+prompt_file <- system.file("rmarkdown", "templates", "edai_llm_extra", "skeleton", "prompt_glue.txt", package = "edAI")
+
 disease <- "chickenpox"
-prompt <- readLines("prompt_glue.txt") |> paste(collapse = "\n") |> 
+prompt <- readLines(prompt_file) |> paste(collapse = "\n") |> 
   glue() |> cat()
 ```
 
@@ -89,18 +89,11 @@ template in your prompt. You can escape these by doubling the curly brackets and
 
 In the prompt below, do the following
 
-- Replace the hard-coded state with a variable called state
+- Replace the hard-coded US state name with a variable (which you then create)
 - Escape any curly brackets that should not be interpreted
 - Use `glue` and `cat` to paste and print the result
 
 ```{r}
-prompt <- paste(
-  "How many people live in the state of Massachusetts in the USA?",
-  "If the state is not valid, return 0 for the population",
-  "Your answer should be formatted as JSON that can be parsed directly using",
-  'the following template: {"validState": 1, "population": 1000}'
-  )
-
 prompt <- paste(
   "How many people live in the state of {state} in the USA?",
   "If the state is not valid, return 0 for the population",
@@ -116,6 +109,8 @@ There are certain tasks that LLMs are inherently bad at, for example when very
 computational or not easily really captured by language. However, if the input
 for this other task can be described and the output is text, the LLM can run 
 this task if needed using an R function or other tool registered by the user.
+
+Because this is more advanced, we'll start with a full demo.
 
 ### 2.1 - Define an R function
 
@@ -138,7 +133,7 @@ pubmed_abstract <- function(PMID) {
 ### 2.2 - Test the function
 
 - Navigate to PudMed an search for an article
-- Use the PudMed ID or PMID as input for the function above
+- Use the PudMed ID (i.e. PMID) as input for the function above
 - Check that the output matches what you see online
 
 ```{r}
@@ -175,12 +170,12 @@ For a full list of types, check out https://ellmer.tidyverse.org/articles/tool-c
 conn <- chat_azure_openai(model = "gpt-5-mini", system_prompt = "be terse")
 conn$register_tool(pubmed_abstract_tool)
 
-conn$chat("That is the main conclusion of the pubmed article with ID 40565474")
+conn$chat("What is the main conclusion of the pubmed article with ID 40565474")
 ```
 
 ### 2.5 Try it yourself
 
-Your aim is to have the LLM answer the following question:
+Your aim is to have the LLM answer a question like this:
 "How many Setosa species in the iris dataset have petal widths between 0.5 and 2"
 
 Start by exploring the built-in iris dataset yourself first
@@ -191,7 +186,7 @@ print(iris)
 ```
 
 
-You are given the following function to get your started:
+You are given the following function to get you started:
 ```{r}
 iris_filter <- function(column, min_val = 0, max_val = 10){
   to_keep <- iris[,column] >= min_val & iris[,column] <= max_val
@@ -220,5 +215,3 @@ conn$register_tool(iris_filter_tool)
 
 conn$chat("How many Setosa species in the iris dataset have petal widths between 0.5 and 2")
 ```
-
-

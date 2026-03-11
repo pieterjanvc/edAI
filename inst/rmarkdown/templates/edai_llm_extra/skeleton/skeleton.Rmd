@@ -3,13 +3,14 @@ title: "LLM extra template"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(ellmer)
 library(glue)
 library(jsonlite)
 library(rentrez)
 library(xml2)
 library(dplyr)
+
+knitr::opts_chunk$set(echo = TRUE)
 edAI_init()
 ```
 
@@ -23,16 +24,14 @@ file, write your prompts as normal, and then read it in.
 
 - Create a new text file called `prompt_simple.txt` in the same folder where you
 saved this file. You can use the Files pane in RStudio if you want.
-- Inside this file, add a very simple prompt.
+- Inside this text file, add a very simple prompt.
 - Use the `readLines` function to now read in your file, and save it in a variable
 called `prompt`
 - Use the `paste` function to _collapse_ all lines into a single string with
 new line separators `\n` in between and save this again to the `prompt` variable 
 - Use the `cat` function to print the text with line breaks to the console
 ```{r}
-prompt <- readLines("prompt_simple.txt") 
-prompt <- paste(prompt, collapse = "\n")
-cat(prompt)
+
 ```
 
 ### 1.2 - Run the prompt
@@ -42,14 +41,6 @@ cat(prompt)
   - Set the system prompt to "be terse"
 - Use your prompt variable in the chat and save the output to `answer`
 ```{r}
-conn <- chat_azure_openai(model = "gpt-5-mini", system_prompt = "be terse")
-answer <- conn$chat(prompt)
-```
-
-```{r}
-disease = "cardiac infarcion"
-prompt <- readLines("prompt_template.txt") |> paste(collapse = "\n")
-prompt <- glue(prompt)
 
 ```
 
@@ -69,16 +60,14 @@ cat(prompt)
 
 Let's now use this in our prompt files ...
 
-- Create a new file called `prompt_glue.txt`
+- Create a new text file called `prompt_glue.txt`
 - Write a simple prompt that has at least one `glue` placeholder
 - Make sure to assign a variable with the same name and a relevant value
 - Read in the file, paste all lines together and replace the placeholders
 - Print your result to the console (or test it with the LLM)
 
 ```{r}
-disease <- "chickenpox"
-prompt <- readLines("prompt_glue.txt") |> paste(collapse = "\n") |> 
-  glue() |> cat()
+
 ```
 
 There are cases when the text itself might contain `{` or `}` which should not
@@ -88,7 +77,7 @@ template in your prompt. You can escape these by doubling the curly brackets and
 
 In the prompt below, do the following
 
-- Replace the hard-coded state with a variable called state
+- Replace the hard-coded US state name with a variable (which you then create)
 - Escape any curly brackets that should not be interpreted
 - Use `glue` and `cat` to paste and print the result
 
@@ -99,13 +88,6 @@ prompt <- paste(
   "Your answer should be formatted as JSON that can be parsed directly using",
   'the following template: {"validState": 1, "population": 1000}'
   )
-
-prompt <- paste(
-  "How many people live in the state of {state} in the USA?",
-  "If the state is not valid, return 0 for the population",
-  "Your answer should be formatted as JSON that can be parsed directly using",
-  'the following template: {{"validState": 1, "population": 1000}}'
-  ) |> glue() |> cat()
 ```
 
 
@@ -115,6 +97,8 @@ There are certain tasks that LLMs are inherently bad at, for example when very
 computational or not easily really captured by language. However, if the input
 for this other task can be described and the output is text, the LLM can run 
 this task if needed using an R function or other tool registered by the user.
+
+Because this is more advanced, we'll start with a full demo.
 
 ### 2.1 - Define an R function
 
@@ -137,11 +121,11 @@ pubmed_abstract <- function(PMID) {
 ### 2.2 - Test the function
 
 - Navigate to PudMed an search for an article
-- Use the PudMed ID or PMID as input for the function above
+- Use the PudMed ID (i.e. PMID) as input for the function above
 - Check that the output matches what you see online
 
 ```{r}
-pubmed_abstract("41071550")
+
 ```
 
 
@@ -174,12 +158,12 @@ For a full list of types, check out https://ellmer.tidyverse.org/articles/tool-c
 conn <- chat_azure_openai(model = "gpt-5-mini", system_prompt = "be terse")
 conn$register_tool(pubmed_abstract_tool)
 
-conn$chat("That is the main conclusion of the pubmed article with ID 40565474")
+conn$chat("What is the main conclusion of the pubmed article with ID 40565474")
 ```
 
 ### 2.5 Try it yourself
 
-Your aim is to have the LLM answer the following question:
+Your aim is to have the LLM answer a question like this:
 "How many Setosa species in the iris dataset have petal widths between 0.5 and 2"
 
 Start by exploring the built-in iris dataset yourself first
@@ -189,8 +173,7 @@ print(iris)
 
 ```
 
-
-You are given the following function to get your started:
+You are given the following function to get you started:
 ```{r}
 iris_filter <- function(column, min_val = 0, max_val = 10){
   to_keep <- iris[,column] >= min_val & iris[,column] <= max_val
@@ -204,20 +187,5 @@ TASK
 - Register the tool and check if the LLM can answer the question
 
 ```{r}
-iris_filter_tool <- tool(
-  iris_filter,
-  description = "Filter the iris data frame based on a range of column values and return the total number of rows that are retrained per species.",
-  arguments = list(
-    column = type_string("Column to filter on. Options are: Sepal.Length, Sepal.Width, Petal.Length, Petal.Width"),
-    min_val = type_number("Minimum value to keep; default = 0"),
-    max_val = type_number("Maximum value to keep; default = 10")
-  )
-)
 
-conn <- chat_azure_openai(model = "gpt-5-mini", system_prompt = "be terse")
-conn$register_tool(iris_filter_tool)
-
-conn$chat("How many Setosa species in the iris dataset have petal widths between 0.5 and 2")
 ```
-
-
