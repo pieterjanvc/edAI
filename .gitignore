@@ -3,3 +3,4 @@ local/
 token_usage.csv
 .Rhistory
 inst/doc
+**/*.duckdb

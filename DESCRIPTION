@@ -20,5 +20,6 @@ Imports:
   httr2,
   jsonlite,
   keyring,
+  rentrez,
   shiny
 VignetteBuilder: knitr

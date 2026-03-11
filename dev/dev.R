@@ -1,42 +1,38 @@
 library(ellmer)
+library(ragnar)
+library(jsonlite)
+library(duckdb)
 
-edAI_init()
 
+rag_store <- "dev/test_rag_store4.duckdb"
 
-chat <- chat_azure_openai(
-  model = "gpt-5-mini",
-  system_prompt = "Be terse"
-)
-
-test <- chat$chat("what is the month now")
-
-# chat$register_tool(openai_tool_web_search())
-
-# Define a regular function to use as a tool
-lucky_numbers <- function(n = 3) {
-  if (n < 1) {
-    return("You must request at least 1 number")
+store <- ragnar_store_create(
+  rag_store,
+  embed = \(x) {
+    info <- keyring::key_get("edAI_creds") |> jsonlite::fromJSON()
+    embed_azure_openai(
+      x,
+      endpoint = "https://azure-ai.hms.edu",
+      model = "text-embedding-3-large",
+      api_key = info$key
+    )
   }
-  set.seed(Sys.Date())
-  sample(1:100, n)
-}
-
-# Create the tool
-lucky_numbers <- tool(
-  lucky_numbers,
-  name = "lucky_numbers",
-  description = "Returns a list of n lucky numbers (changes daily). Defaults to 3",
-  #https://ellmer.tidyverse.org/articles/tool-calling.html#tool-inputs-and-outputs
-  arguments = list(
-    n = type_integer("The number of lucky numbers to return")
-  )
 )
 
-# Register the tool
-chat$register_tool(lucky_numbers)
 
-chat$chat("Can I have 0 lucky numbers?")
+doc <- read_as_markdown(
+  "https://writings.stephenwolfram.com/2023/02/what-is-chatgpt-doing-and-why-does-it-work/"
+)
 
-chat$chat("2")
+chunks <- markdown_chunk(doc)
 
-token_usage()
+ragnar_store_insert(store, chunks)
+
+ragnar_store_build_index(store)
+
+test <- ragnar_retrieve_vss(
+  store,
+  "What happens when we 'train' a neural network?"
+)
+
+test$text

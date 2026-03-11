@@ -1,0 +1,8 @@
+Provide me the following information about {disease}
+
+- Incidence rate (yearly) in the USA
+- Up to 5 major symtoms
+- Male to Female ratio
+
+Return the result as a JSON file that can be parsed directly using the follwing
+template: {{"incidence": 100, "symptoms": ["symtom1", "symtom2"], "ratio": 1.2}}
