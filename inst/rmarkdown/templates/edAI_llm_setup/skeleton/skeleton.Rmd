@@ -90,9 +90,6 @@ the model's overall thought process and response.
 
 ```
   
-Tip: you can also change the system prompt inside of the `chat` function if
-you only want to change it for that particular answer
-  
 ## 3 - Parsing JSON and CSV
 
 So far the AI has returned plain text, which needs a human to read and process

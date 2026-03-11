@@ -90,9 +90,6 @@ the model's overall thought process and response.
 conn <- chat_azure_openai(model = "gpt-5-mini", system_prompt = "Only reply with one or more names of anatomical descriptions, in bullet points if needed. Nothing else.")
 ```
   
-Tip: you can also change the system prompt inside of the `chat` function if
-you only want to change it for that particular answer
-
 ## 3 - Parsing JSON and CSV
 
 So far the AI has returned plain text, which needs a human to read and process
