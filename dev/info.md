@@ -8,3 +8,5 @@ usethis::use_rmarkdown_template(
   template_description = "Getting started with LLMs"
 )
 ```
+
+devtools::build_vignettes()

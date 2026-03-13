@@ -1,5 +1,10 @@
 ---
 title: "LLM_extra"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{LLM_extra}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 
@@ -11,8 +16,8 @@ library(rentrez)
 library(xml2)
 library(dplyr)
 
-knitr::opts_chunk$set(echo = TRUE)
-edAI_init()
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+edAI::edAI_init()
 ```
 
 ## 1 - Separate prompt files
@@ -94,6 +99,7 @@ In the prompt below, do the following
 - Use `glue` and `cat` to paste and print the result
 
 ```{r}
+state = "Massachusetts"
 prompt <- paste(
   "How many people live in the state of {state} in the USA?",
   "If the state is not valid, return 0 for the population",
