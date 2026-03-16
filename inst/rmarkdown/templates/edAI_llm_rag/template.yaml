@@ -1,0 +1,4 @@
+name: edAI_llm_rag
+description: >
+   Retrieval Augmented Generation
+create_dir: FALSE

@@ -34,6 +34,7 @@ edAI_wiki_page <- function(url) {
 #' @param path File path to the DuckDB-backed RAG store
 #' @param model Embedding model name (default: `"text-embedding-3-small"`)
 #'
+#' @import ragnar
 #' @importFrom keyring key_get
 #' @importFrom jsonlite fromJSON
 #'
@@ -70,6 +71,8 @@ edAI_rag_store <- function(path, model = "text-embedding-3-small") {
 #' @param origin Source label for the content. Required when `new_data` is a
 #'   raw string; optional when it is a file path (defaults to the path)
 #'
+#' @import ragnar
+#'
 #' @returns The store, invisibly
 #' @export
 #'
@@ -79,7 +82,7 @@ edAI_rag_insert <- function(store, new_data, origin) {
   }
 
   if (file.exists(new_data)) {
-    origin <- origin %||% new_data
+    # origin <- origin %||% new_data
     new_data <- read_as_markdown(new_data)
   } else {
     if (missing(origin)) {

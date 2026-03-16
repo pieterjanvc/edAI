@@ -4,5 +4,6 @@ token_usage.csv
 .Rhistory
 inst/doc
 **/*.duckdb
+**/*.duckdb.wal
 /doc/
 /Meta/
