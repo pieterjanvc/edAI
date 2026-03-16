@@ -1,0 +1,4 @@
+name: edAI_api
+description: >
+   Using the httr2 library to fetch web data via an API
+create_dir: FALSE

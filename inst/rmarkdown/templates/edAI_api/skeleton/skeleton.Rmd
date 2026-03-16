@@ -1,0 +1,183 @@
+---
+title: "Accessing a Web API with httr2"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(httr2)
+```
+
+## 1 - What is a web API
+
+A web API (Application Programming Interface) is a way for computers to request
+and share data across the internet. Many websites that curate data and allow you
+to search / download it, also provide and API to automate this process through
+code, bypassing the need for manual interaction via the website.
+
+An API call consist of two stages
+
+- **request**: This is the info you send to a server to request specific data
+- **response**: This is the (meta)data returned by the server in response to a
+  request
+
+There are a few things you need to send a basic web API request
+
+- **The base URL**: This is the link that points to the API server. This URL is
+  often different from the web-interface URL
+- **Endpoint**: This is the resource you want to access. APIs typically have
+  multiple endpoints / resources
+- **Query parameters**: Specific filters or other details needed to retrieve the
+  data of interest only
+
+Some APIs also require
+
+- **Authentication details**: Many APIs require you to authenticate, just as you
+  would login to a website to access resources
+- **body**: A set of additional data (often structured as JSON) to be sent along
+  with the request
+- _This list is not exhaustive, but will not be explored further here_
+
+## 2 - Using httr2 to call an API
+
+The `httr2` library in R provides all functions you'll need to fetch data from a
+web API.
+
+Let's start by building a simple request to a public API (no authentication
+needed). You should open the documentation website to see what the API expects
+as input and returns as output.
+
+### 2.1 - Request
+
+- Source: The Human Phenotype Ontology
+- Documentation: https://clinicaltables.nlm.nih.gov/apidoc/hpo/v3/doc.html
+- Base URL: https://clinicaltables.nlm.nih.gov/api/hpo/v3/search
+
+```{r}
+req_object <- request("https://clinicaltables.nlm.nih.gov/api/hpo/v3/search") |> 
+  req_url_query(terms = "fainting")
+
+print(req_object)
+```
+
+- `request`: takes the base URL
+- `req_url_query`: a list of keys (parameters) and values. In this case the
+  documentation specified that `terms` is a required parameter
+
+Printing this object will show you the full URL that contains all combined info.
+
+Note that this simple API only has a **single endpoint** `search`, which means
+the base URL is just that endpoint. If there were **multiple endpoints**, we can
+extend the base URL using the `req_url_path_append` function.
+
+```{r}
+req_object <- request("https://clinicaltables.nlm.nih.gov/api/hpo/v3") |> 
+  req_url_path_append("search") |> 
+  req_url_query(terms = "fainting")
+
+print(req_object)
+```
+
+_The result is identical to the previous step_
+
+### 2.2 - Response
+
+Most modern APIs return their results as JSON files, though it is important to
+check this in the documentation.
+
+If the request was successful, we can extract the data from the response
+
+```{r}
+result <- req_perform(req_object)
+result <- resp_body_json(result)
+
+print(result)
+```
+
+- `req_perform()`: This executes the request and fetches the response data
+- `resp_body_json`: Extracts JSON data from the response and turns it into an R
+  list
+
+### 2.3 - Try it yourself
+
+Modify the request such that it will
+
+- search for terms that contain the text `head`
+- Only return the first 5 results (check the documentation)
+
+Tip: You can chain all commands (request and response) together using `|>`
+
+```{r}
+```
+
+## 3 - Fetch data from the Clinical Trials API
+
+You will explore the ClinicalTrials.gov API to fetch results on clinical trials
+registered with this organisation.
+
+This API contains much more data, and is organised into multiple endpoints
+(resources) so you will have to extend the base URL using the
+`req_url_path_append` function.
+
+Start by opening the
+[documentation](https://clinicaltrials.gov/data-api/api#extapi)
+
+- The base URL for this api is: https://clinicaltrials.gov/api/v2/
+
+### 3.1 - Return the version information from the API
+
+Call the _version_ endpoint. Tip: You don't need any query parameters.
+
+```{r}
+```
+
+### 3.2 - Return results for a specific study
+
+Using the _studies_ endpoint. Get the results for the study with ID NCT04846335.
+
+Note that you are not going to search, but access a _nested_ endpoint, so you
+will have to supply multiple arguments to `req_url_path_append`
+
+```{r}
+```
+
+### 3.3 - Search for studies on Progeria
+
+Using the _studies_ endpoint, search for the following
+
+- Condition: Progeria syndrome
+- Only return completed studies
+
+You will need to use both the endpoint and query functions and should expand the
+documentation for the study endpoint to find details on names and values of
+query parameters.
+
+```{r}
+```
+
+## 4 - Recreating rentrez library functions
+
+The `rentrez` library in R allows you to interact with the entrez API from NCBI.
+However, these functions are simply wrappers around basic API commands we can
+recreate with `httr2`
+
+### 4.1 - Search for a MeSH term ID
+
+- Navigate to the
+  [Entrez ESearch documentation](https://www.ncbi.nlm.nih.gov/books/NBK25499/#_chapter4_ESearch_)
+- Use the following criteria
+  - Query the `mesh` database
+  - Search for "long covid"
+  - Make sure to return JSON (tip: check optional parameters)
+  - Sort the result by relevance
+- Extract the top ID from the returned result
+
+```{r}
+```
+
+### 4.2 - Get MeSH term ID details
+
+Use the ID from the previous step and switch to the `summary` endpoint to return
+MeSH info for this ID
+
+```{r}
+```
