@@ -16,10 +16,12 @@ Suggests:
 Imports:
   bslib,
   dplyr,
+  duckdb,
   ellmer,
   httr2,
   jsonlite,
   keyring,
-  rentrez,
+  ragnar,
+  rentrez,  
   shiny
 VignetteBuilder: knitr
