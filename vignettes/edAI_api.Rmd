@@ -1,5 +1,5 @@
 ---
-title: "Accessing a Web API with httr2"
+title: "edAI_api"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{edAI_api}
@@ -9,6 +9,7 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+library(edAI)
 library(httr2)
 ```
 

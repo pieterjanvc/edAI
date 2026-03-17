@@ -7,8 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-
 ```{r setup, include=FALSE}
+library(edAI)
 library(ellmer)
 library(glue)
 library(jsonlite)
@@ -22,20 +22,21 @@ edAI::edAI_init()
 
 ## 1 - Separate prompt files
 
-Writing long pieces of text inside a quoted R string can be hard and might 
-clutter you coding script. Therefore, it's easier to create a separate text 
+Writing long pieces of text inside a quoted R string can be hard and might
+clutter you coding script. Therefore, it's easier to create a separate text
 file, write your prompts as normal, and then read it in.
 
 ### 1.1 - Simple file
 
 - Create a new text file called `prompt_simple.txt` in the same folder where you
-saved this file. You can use the Files pane in RStudio if you want.
+  saved this file. You can use the Files pane in RStudio if you want.
 - Inside this file, add a very simple prompt.
-- Use the `readLines` function to now read in your file, and save it in a variable
-called `prompt`
-- Use the `paste` function to _collapse_ all lines into a single string with
-new line separators `\n` in between and save this again to the `prompt` variable 
+- Use the `readLines` function to now read in your file, and save it in a
+  variable called `prompt`
+- Use the `paste` function to _collapse_ all lines into a single string with new
+  line separators `\n` in between and save this again to the `prompt` variable
 - Use the `cat` function to print the text with line breaks to the console
+
 ```{r}
 # Replace with your own file if you like
 prompt_file <- system.file("rmarkdown", "templates", "edai_llm_extra", "skeleton", "prompt_simple.txt", package = "edAI")
@@ -51,6 +52,7 @@ cat(prompt)
   - choose "gpt-5-mini"
   - Set the system prompt to "be terse"
 - Use your prompt variable in the chat and save the output to `answer`
+
 ```{r}
 conn <- chat_azure_openai(model = "gpt-5-mini", system_prompt = "be terse")
 answer <- conn$chat(prompt)
@@ -62,6 +64,7 @@ The `glue` package allows you to put placeholders inside a string which will be
 replaced with the content of a variable when glued together
 
 **Example**
+
 ```{r}
 animal1 <- "mouse"
 animal2 <- "tiger"
@@ -108,20 +111,20 @@ prompt <- paste(
   ) |> glue() |> cat()
 ```
 
-
 ## 2 - Using tools
 
-There are certain tasks that LLMs are inherently bad at, for example when very 
+There are certain tasks that LLMs are inherently bad at, for example when very
 computational or not easily really captured by language. However, if the input
-for this other task can be described and the output is text, the LLM can run 
+for this other task can be described and the output is text, the LLM can run
 this task if needed using an R function or other tool registered by the user.
 
 Because this is more advanced, we'll start with a full demo.
 
 ### 2.1 - Define an R function
 
-The example function below will search PubMed for an article abstract given
-a specific PubMed ID using the `rentrez` and `xml` libraries
+The example function below will search PubMed for an article abstract given a
+specific PubMed ID using the `rentrez` and `xml` libraries
+
 ```{r}
 pubmed_abstract <- function(PMID) {
   abstract <- tryCatch({
@@ -133,7 +136,6 @@ pubmed_abstract <- function(PMID) {
   
   return(abstract)
 }
-
 ```
 
 ### 2.2 - Test the function
@@ -146,8 +148,8 @@ pubmed_abstract <- function(PMID) {
 pubmed_abstract("41071550")
 ```
 
-
 ### 2.3 - Convert the function into a tool for the LLM
+
 Use the `tool` function from the `ellmer` package to create a new tool
 
 - Check the `tool` documentation for `fun`, `description` and `arguments`
@@ -161,15 +163,17 @@ pubmed_abstract_tool <- tool(
   )
 )
 ```
-For a full list of types, check out https://ellmer.tidyverse.org/articles/tool-calling.html#tool-inputs-and-outputs
+
+For a full list of types, check out
+https://ellmer.tidyverse.org/articles/tool-calling.html#tool-inputs-and-outputs
 
 ### 2.4 - Register the tool for use
 
-- Create a new Azure connection object, set the model to gpt-5-mini and the 
+- Create a new Azure connection object, set the model to gpt-5-mini and the
   system prompt to be terse in its response
 - Use the `register_tool` function from the `ellmer` package to register the
   tool you just created
-- Now use the chat function to ask about the main conclusion of the pubmed 
+- Now use the chat function to ask about the main conclusion of the pubmed
   article with ID 40565474
 
 ```{r}
@@ -181,18 +185,17 @@ conn$chat("What is the main conclusion of the pubmed article with ID 40565474")
 
 ### 2.5 Try it yourself
 
-Your aim is to have the LLM answer a question like this:
-"How many Setosa species in the iris dataset have petal widths between 0.5 and 2"
+Your aim is to have the LLM answer a question like this: "How many Setosa
+species in the iris dataset have petal widths between 0.5 and 2"
 
 Start by exploring the built-in iris dataset yourself first
+
 ```{r}
-
 print(iris)
-
 ```
 
-
 You are given the following function to get you started:
+
 ```{r}
 iris_filter <- function(column, min_val = 0, max_val = 10){
   to_keep <- iris[,column] >= min_val & iris[,column] <= max_val
@@ -201,7 +204,9 @@ iris_filter <- function(column, min_val = 0, max_val = 10){
 ```
 
 TASK
-- Explore what the function does and how it works (feel free to use AI if needed)
+
+- Explore what the function does and how it works (feel free to use AI if
+  needed)
 - Create a tool from this function that the LLM can use
 - Register the tool and check if the LLM can answer the question
 

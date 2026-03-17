@@ -1,9 +1,14 @@
 ---
-title: "Retrieval Augmented Generation (RAG)"
+title: "edAI_llm_rag"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{edAI_llm_rag}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, eval = FALSE)
 library(edAI)
 library(ragnar)
 library(ellmer)
@@ -171,6 +176,7 @@ Create a new duckdb vector store called `test_store.duckdb` and save the store
 info to a variable
 
 ```{r}
+test_store <- edAI_rag_store("test_store.duckdb")
 ```
 
 ### 4.2 - Add data to the store
@@ -184,6 +190,21 @@ Add the following to the vector store
   internet
 
 ```{r}
+edAI_rag_insert(
+  store = test_store, 
+  new_data = edAI_wiki_page("https://en.wikipedia.org/wiki/Fontan_procedure"), 
+  origin = "wiki_fontan"
+)
+edAI_rag_insert(
+  store = test_store, 
+  new_data = edAI_wiki_page("https://en.wikipedia.org/wiki/Cobblestone"), 
+  origin = "wiki_cobblestone"
+)
+
+edAI_rag_insert(
+  store = test_store, 
+  new_data = prompt_file <- system.file("rmarkdown", "templates", "edAI_llm_rag", "skeleton", "unknown_info.txt", package = "edAI")
+)
 ```
 
 ### 4.3 - Search for relevant chunks
@@ -196,6 +217,8 @@ you added to the database. Explore the following items in the result object
 - text
 
 ```{r}
+prompt <- "What are the advantages of cobblestone roads over other road types"
+relevant_chunks <- ragnar_retrieve(store = test_store,text = prompt)
 ```
 
 ## 4.4 - Couple an LLM to your store
@@ -204,4 +227,16 @@ Register you store with an LLM and then ask it a question that can only be
 answered if you now the info contained in your `unknown_info.txt` file.
 
 ```{r}
+conn <- chat_azure_openai(
+  system_prompt = "You are a helpful assistant. Before answering any question, always use the retrieve tool to search the knowledge store for relevant information. Base your answer on the retrieved content and be terse",
+  model = "gpt-5-mini"
+)
+
+ragnar_register_tool_retrieve(
+    conn, 
+    test_store, 
+    store_description = "the knowledge store"
+)
+
+answer <- conn$chat("What's the name of the person with the golden hat and pink bow tie")
 ```
