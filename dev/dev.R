@@ -1,64 +1,20 @@
-library(ellmer)
-library(ragnar)
-library(jsonlite)
-library(duckdb)
 library(httr2)
-library(jsonlite)
-library(stringr)
-
-rag_store <- "dev/test_rag_store4.duckdb"
-
-store <- ragnar_store_create(
-  rag_store,
-  embed = \(x) {
-    info <- keyring::key_get("edAI_creds") |> jsonlite::fromJSON()
-    embed_azure_openai(
-      x,
-      endpoint = "https://azure-ai.hms.edu",
-      model = "text-embedding-3-large",
-      api_key = info$key
-    )
-  }
-)
 
 
-get_wiki_page <- function(url) {
-  # test <- request(url) |> req_method("HEAD") |> req_perform()
+base_url <- "https://archive-api.open-meteo.com/v1/"
+endpoint <- "archive"
 
-  resp <- request("https://en.wikipedia.org/w/api.php") |>
-    req_url_query(
-      action = "query",
-      prop = "extracts",
-      titles = str_extract(url, "[^/]+$"),
-      format = "json",
-      explaintext = TRUE
-    ) |>
-    req_perform()
+result <- request(base_url) |>
+  req_url_path_append(endpoint) |>
+  req_url_query(
+    latitude = 42.33746763,
+    longitude = -71.10549472,
+    start_date = "2020-01-01",
+    end_date = "2020-01-01",
+    daily = "weather_code,temperature_2m_mean,precipitation_sum,daylight_duration,sunshine_duration",
+    timezone = "America/New_York"
+  ) |>
+  req_perform() |>
+  resp_body_json()
 
-  data <- resp |> resp_body_json()
-
-  data$query$pages[[1]]$extract
-}
-
-url <- "https://en.wikipedia.org/wiki/Retinitis_pigmentosa"
-wiki <- get_wiki_page(url)
-
-
-doc <- read_as_markdown(wiki)
-
-doc <- read_as_markdown(
-  "https://en.wikipedia.org/w/index.php?title=Retinitis_pigmentosa&action=raw"
-)
-chunks <- markdown_chunk(wiki)
-
-store <- ragnar_store_connect(rag_store, read_only = F)
-ragnar_store_insert(store, chunks)
-
-ragnar_store_build_index(store)
-
-test <- ragnar_retrieve_vss(
-  store,
-  "How is retinitis pigmentosa inherited?"
-)
-
-test$text
+result$daily
