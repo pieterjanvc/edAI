@@ -6,7 +6,9 @@
 #' @importFrom stringr str_extract
 #' @importFrom jsonlite fromJSON
 #'
+#'
 #' @returns A character string containing the plain text extract of the page
+#' @export
 #'
 edAI_wiki_page <- function(url) {
   # test <- request(url) |> req_method("HEAD") |> req_perform()
