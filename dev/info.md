@@ -13,10 +13,3 @@ usethis::use_vignette(name)
 ```
 
 devtools::build_vignettes()
-
-| Cosine Similarity | Cosine Distance | Meaning                        |
-| ----------------- | --------------- | ------------------------------ |
-| 1.0               | 0.0             | Identical vectors (best match) |
-| 0.8               | 0.2             | Very similar                   |
-| 0.5               | 0.5             | Moderately similar             |
-| 0.0               | 1.0             | Unrelated                      |

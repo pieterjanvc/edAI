@@ -1,0 +1,115 @@
+---
+title: "edAI_llm_agents"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{edAI_llm_agents}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(edAI)
+library(ellmer)
+library(glue)
+library(jsonlite)
+edAI_init()
+```
+
+```{r}
+ai_parse_json <- function(string, tries = 3) {
+  result <- NULL
+  for (i in 1:tries) {
+    # Try parsing without AI first
+    result <- tryCatch(
+      {
+        fromJSON(string)
+      },
+      error = function(e) {
+        print("JSON parsing failed")
+        return(NULL)
+      }
+    )
+    # Fix JSON with AI if previous step failed
+    if (is.null(result)) {
+      fixJSON <- chat_azure_openai(
+        system_prompt = "Try and fix the provided JSON syntax errors and return valid JSON without anything else that could prevent immediate parsing. Do not try and repair a string that is clearly not JSON or would require adding / deleting data, in that case return nothing!",
+        model = "gpt-5-mini"
+      )
+      string <- fixJSON$chat(string)
+        if (string == "") {
+        # AI thinks it's not a JSON file, stop trying
+        break()
+      }
+    } else {
+      # Stop trying if parsing worked
+      break()
+    }
+  }
+
+  return(list(success = !is.null(result), result = result))  
+}
+```
+```{r}
+disease <- "diabetes mellitus type 2"
+number_of_var <- 4
+n_cases <- 10
+
+var_prompt <- glue(
+  "Consider {disease} and generate a list of {number_of_var} patient characteristics, symptoms or variables that NEW patients can present with but can differ between all kinds of patients with the disease. Changing these should not alter the diagnosis, but could alter progression, outcome, onset etc. Limit the variables to the history taking part or physical examination. You will be asked to provide examples, option or data ranges. Use medically valid values. Report using the provided JSON template below"
+)
+conn <- chat_azure_openai(
+  system_prompt = glue(
+    'Respond to using the JSON template below to generate info on {number_of_var} variables but don\'t add anything outside JSON! Replace each "var" with the name of a characteristic (use snake case) and pick the correct type (text, categorical, integer or float) and parameters. {{"var":{{"type":"text","examples":["example1","example2"]}},"var":{{"type":"categorical","options":["option1","option1"]}},"var":{{"type":"integer","min":0,"max":100},"var":{{"type":"float","min":5.1,"max":7.1}}}}'
+  ),
+  model = "gpt-5-mini"
+)
+
+var_response <- conn$chat(var_prompt)
+
+var_list <- ai_parse_json(var_response)
+
+if (!var_list$success) {
+  stop("Agent failed at JSON parsing step")
+} else {
+  var_list <- var_list$result
+}
+
+template_prompt <- paste(
+  'You are given a list of common patient characteristics that can vary between people diagnosed with diabetes mellitus type 2. Write a general case presentation template (no other info, just presentation) that incorporates all of these characteristics using placeholders that allows us to create many valid variations of the same case later. Only return the template, nothing else. Placeholders need to be put between curly brackets. Example: "A {gender} patient of {age} years old ..." characteristics to use:',
+  paste(names(var_list), collapse = ", ")
+)
+conn2 <- chat_azure_openai(
+  system_prompt = 'Make sure the language reflects professional medical writing and verify that all placeholders are formatted like {characteristic}. Only use the provided characteristics, don\'t add any new ones',
+  model = "gpt-5-mini"
+)
+
+template <- conn2$chat(template_prompt)
+
+cases <- sapply(1:n_cases, function(x) {
+  glue_vars <- lapply(var_list, function(var) {
+    if (var$type %in% c("text", "categorical")) {
+      sample(var[[2]], 1)
+    } else if (var$type == "integer") {
+      sample(var$min:var$max, 1)
+    } else {
+      runif(1, var$min, var$max) |> round(1)
+    }
+  })
+
+  glue_data(glue_vars, template)
+})
+
+result <- list(
+  disease = disease,
+  var_list = var_list,
+  template = template,
+  example_cases = cases  
+)
+```

@@ -1,20 +1,12 @@
 library(httr2)
 
 
-base_url <- "https://archive-api.open-meteo.com/v1/"
-endpoint <- "archive"
+base_url <- "https://api.orphadata.com"
+endpoint <- "/rd-phenotypes/hpoids/HP:0004322,HP:0000407,HP:0000639,HP:0001644"
 
 result <- request(base_url) |>
   req_url_path_append(endpoint) |>
-  req_url_query(
-    latitude = 42.33746763,
-    longitude = -71.10549472,
-    start_date = "2020-01-01",
-    end_date = "2020-01-01",
-    daily = "weather_code,temperature_2m_mean,precipitation_sum,daylight_duration,sunshine_duration",
-    timezone = "America/New_York"
-  ) |>
   req_perform() |>
   resp_body_json()
 
-result$daily
+result$data$results[[1]]$Disorder
