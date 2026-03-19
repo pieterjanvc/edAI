@@ -2,11 +2,11 @@
 
 
 ```r
-name <- "edAI_llm_rag"
+name <- "edAI_llm_agent"
 usethis::use_rmarkdown_template(
   template_name = name,
   template_dir = name,
-  template_description = "Using the httr2 library to fetch web data via an API"
+  template_description = "Creating simple AI agents"
 )
 
 usethis::use_vignette(name)

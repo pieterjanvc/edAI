@@ -9,6 +9,9 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, eval = FALSE)
+```
+
+```{r}
 library(edAI)
 library(ragnar)
 library(ellmer)

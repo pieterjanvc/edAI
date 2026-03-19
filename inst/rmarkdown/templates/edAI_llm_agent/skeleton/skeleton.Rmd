@@ -1,14 +1,9 @@
 ---
-title: "edAI_llm_agents"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{edAI_llm_agents}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+title: "Creating simple AI agents"
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, eval = FALSE)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r setup}

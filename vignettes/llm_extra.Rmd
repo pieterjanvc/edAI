@@ -8,6 +8,10 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+```{r}
 library(edAI)
 library(ellmer)
 library(glue)
@@ -16,7 +20,6 @@ library(rentrez)
 library(xml2)
 library(dplyr)
 
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 edAI::edAI_init()
 ```
 

@@ -9,6 +9,9 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, eval = FALSE)
+```
+
+```{r}
 library(edAI)
 library(jsonlite)
 library(ellmer)
@@ -16,36 +19,40 @@ library(ellmer)
 
 ## Intro
 
-This worksheet will guide you through the basics of working with LLMs from 
+This worksheet will guide you through the basics of working with LLMs from
 within R. Given you are using the custom `edAI` library, some parts of this
 process have been simplified.
 
 ## 1 - Connecting to models hosted on Azure
+
 These exercises assume you have been given access to an Azure instance that is
 hosting an LLM. You will **need an API key** in order to proceed
 
 Start by running the `edAI_setup()`function and provide the following info
-- username: you can pick whichever username you like, but know this will be
-used to track your token usage
-- api key: the key provided to you by the instructors 
+
+- username: you can pick whichever username you like, but know this will be used
+  to track your token usage
+- api key: the key provided to you by the instructors
 
 ```{r}
 edAI_setup()
 ```
 
-
 ## 2 - Simple chat with an LLM
 
 ### 2.1 - Initialise the session
-Run the `edAI_init()` function from the `edAI` package to authenticate with
-the Azure cloud
+
+Run the `edAI_init()` function from the `edAI` package to authenticate with the
+Azure cloud
 
 ```{r}
 edAI_init()
 ```
+
 ### 2.2 - Connect to a chat model
 
 To start chatting with an LLM, use the one of the chat functions from `ellmer`
+
 - Make sure the `ellmer` library has been loaded
 - Use the `chat_azure_openai()` function to establish a connection and save the
   connection to a variable called `conn`
@@ -57,9 +64,9 @@ conn <- chat_azure_openai(model = "gpt-5-mini")
 
 ### 2.3. - Send your first prompt
 
-- Using the `conn` object you just created, access the `chat` function it contains
-using the `$` operator
-- Add a prompt that asks which nerve enervates the biceps brachii muscle 
+- Using the `conn` object you just created, access the `chat` function it
+  contains using the `$` operator
+- Add a prompt that asks which nerve enervates the biceps brachii muscle
 - Store the result inside a new variable called `answer1`
 
 ```{r}
@@ -68,44 +75,50 @@ answer1 <- conn$chat("Which nerve enervates the biceps brachii muscle")
 
 ### 2.3 - Continue the conversation
 
-The `conn` object remembers the conversation which means the next prompt
-can build off the last answer without having to provide more context.
+The `conn` object remembers the conversation which means the next prompt can
+build off the last answer without having to provide more context.
+
 - Ask the model which other muscles are enervated by this nerve
 - Store the answer in a variable called `answer2`
+
 ```{r}
 answer2 <- conn$chat("Which other muscles are enervated by this nerve")
 ```
 
 This history is kept until the chat session is re-initialised. This happens when
-  - You overwrite or `conn` the variable you created in the first step
-  - You create a new chat object and use that one instead
-  - You restart R
-  
+
+- You overwrite or `conn` the variable you created in the first step
+- You create a new chat object and use that one instead
+- You restart R
+
 ### 2.4 - The system prompt
 
 When creating a connection object you can also specify a system prompt to shape
 the model's overall thought process and response.
 
 - Replace the `conn` object with a new instance by reassigning it below
-- Use the same model, but now add a system prompt that request that the answer 
-  only contains anatomical names and uses bullet points in case there are multiple
-- When ready, run this code block first the, re-run 2.2 and 2.3 and see how 
-  the answer had changed without having touched the user prompt
+- Use the same model, but now add a system prompt that request that the answer
+  only contains anatomical names and uses bullet points in case there are
+  multiple
+- When ready, run this code block first the, re-run 2.2 and 2.3 and see how the
+  answer had changed without having touched the user prompt
+
 ```{r}
 conn <- chat_azure_openai(model = "gpt-5-mini", system_prompt = "Only reply with one or more names of anatomical descriptions, in bullet points if needed. Nothing else.")
 ```
-  
+
 ## 3 - Parsing JSON and CSV
 
 So far the AI has returned plain text, which needs a human to read and process
 it before code can continue with the output. Let's for the output to become
-structured. 
+structured.
 
 Before we use the AI, let's first practice parsing JSON and CSV strings to R
 objects.
 
 ### 3.1 - Parsing CSV
-- You normally read CSV files from disk by providing a path to the file, but you 
+
+- You normally read CSV files from disk by providing a path to the file, but you
   can also read them from a string of text using the `textConnection()` function
 - Your task is to write a single line of text inside the `string` variable that
   will be converted into a data frame with the follow properties
@@ -117,6 +130,7 @@ objects.
 Tip: Instead of using real line breaks, insert the line break character `\n`
 
 The resulting table should look like this
+
 ```
 id val
 1   5
@@ -130,7 +144,8 @@ print(result_table)
 ```
 
 ### 3.2 - Parsing JSON
-- Reading JSON from a string is simple. All we need is the `fromJSON()` function 
+
+- Reading JSON from a string is simple. All we need is the `fromJSON()` function
   from the `jsonlite` library
 - Your task is to write a single line of text inside the `string` variable that
   will be converted into an R list with the follow items
@@ -143,10 +158,11 @@ Tips
 - JSON ignore line breaks, so you don't need to use `\n`
 - If you need to use quotes (e.g. `"`) in a string, you need to
   - Escape using `\` --> "this quote \" is part of the text"
-  - Use single quotes for the string and double for the text 
-    --> 'this quote " is part of the text'
-    
+  - Use single quotes for the string and double for the text --> 'this quote "
+    is part of the text'
+
 The resulting list should look like this
+
 ```
 $attempt
 [1] 1
@@ -163,29 +179,25 @@ print(result_list)
 
 ## 4 - Let the LLM return stuctured data and parse it
 
-Combining all previous steps, we'll now prompt the LLM, make sure the output 
-is structured, and then parse it as an R object.
+Combining all previous steps, we'll now prompt the LLM, make sure the output is
+structured, and then parse it as an R object.
 
 ### 4.1 - Disease symptom table
- 
+
 - Create a new Azure LLM object called `symptoms` which can take prompts
-- The prompt will ask to return a list of up to 5 symptoms for a given disease 
+- The prompt will ask to return a list of up to 5 symptoms for a given disease
   (e.g. cardiac infarction)
 - Structure the prompt such that it will return text that can be parsed as a CSV
   file which, when read into a data frame will have two columns:
   - symptom: the name of the symptom
-  - occurrence: score between 1 - 4 with 1 being nearly always present and 4 
-  rarely present
-- When finished, you should have a variable called `symptoms_table` that 
+  - occurrence: score between 1 - 4 with 1 being nearly always present and 4
+    rarely present
+- When finished, you should have a variable called `symptoms_table` that
   contains an R data frame with the result
-  
-The resulting table should look something like this
-                              symptom occurrence
-1              Chest pain or pressure         1
-2       Shortness of breath (dyspnea)         2
-3              Diaphoresis (sweating)         2
-4 Radiating pain to left arm/jaw/neck         3
-5 Syncope or profound lightheadedness         4
+
+The resulting table should look something like this symptom occurrence 1 Chest
+pain or pressure 1 2 Shortness of breath (dyspnea) 2 3 Diaphoresis (sweating) 2
+4 Radiating pain to left arm/jaw/neck 3 5 Syncope or profound lightheadedness 4
 
 Tip: LLMs know how CSV files are structured, so you don't need to provide an
 example, but you do need to describe the expected content (columns and values)
@@ -209,6 +221,7 @@ into an R list with the following elements
 - age group: whether this disease if common in children, adults or both
 
 The resulting list should look something like this
+
 ```
 $symptoms
 [1] "Chest pain or pressure (often central)"   
@@ -232,4 +245,3 @@ llm_output <- symptoms$chat('Provide some details about cardiac infarction.
 symptoms_list <- fromJSON(llm_output)
 print(symptoms_list)
 ```
-
