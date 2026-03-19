@@ -51,9 +51,9 @@ ai_parse_json <- function(string, tries = 3) {
   result <- NULL
   for (i in 1:tries) {
     # Try parsing without AI first
-    if(jsonlite::validate(string)){
-       result <- fromJSON(string)
-    }   
+    if (jsonlite::validate(string)) {
+      result <- fromJSON(string)
+    }
 
     # Fix JSON with AI if previous step failed
     if (is.null(result)) {
@@ -62,7 +62,7 @@ ai_parse_json <- function(string, tries = 3) {
         model = "gpt-5-mini"
       )
       string <- fixJSON$chat(string)
-        if (string == "") {
+      if (string == "") {
         # AI thinks it's not a JSON file, stop trying
         break()
       }
@@ -72,7 +72,7 @@ ai_parse_json <- function(string, tries = 3) {
     }
   }
 
-  return(list(success = !is.null(result), string = string, result = result))  
+  return(list(success = !is.null(result), string = string, result = result))
 }
 ```
 
@@ -115,12 +115,17 @@ var_list <- ai_parse_json(var_response)
 
 if (!var_list$success) {
   stop("Agent failed at JSON parsing step")
-} 
+}
 
 # Use the set of variables / characteristics to generate a template scenario
 template_prompt <- paste(
-  'You are given a list of common patient characteristics that can vary between people diagnosed with diabetes mellitus type 2. Write a general NEW case presentation template (no other info, just presentation) that incorporates all of these characteristics using placeholders that allows us to create many valid variations of the same case later. Do not include the diagnosis.\n\nCharacteristics to use:',
-  var_list$string, '\n\nTo Return\nOnly return the template, nothing else. Placeholders need to be put between curly brackets. Example: "A {gender} patient of {age} years old ...". ', collapse = "\n")
+  'You are given a list of common patient characteristics that can vary between people diagnosed with',
+  disease,
+  '. Write a general NEW case presentation template (no other info, just presentation) that incorporates all of these characteristics using placeholders that allows us to create many valid variations of the same case later. Do not include the diagnosis.\n\nCharacteristics to use:',
+  var_list$string,
+  '\n\nTo Return\nOnly return the template, nothing else. Placeholders need to be put between curly brackets. Example: "A {gender} patient of {age} years old ...". ',
+  collapse = "\n"
+)
 
 conn2 <- chat_azure_openai(
   system_prompt = 'Make sure the language reflects professional medical writing and verify that all placeholders are formatted like {characteristic}. Only use the provided characteristic names, don\'t add any new ones. Adjust the length of the case template the to number of placeholders to keep it short',
@@ -147,7 +152,7 @@ result <- list(
   disease = disease,
   var_list = var_list,
   template = template,
-  example_cases = cases  
+  example_cases = cases
 )
 ```
 
